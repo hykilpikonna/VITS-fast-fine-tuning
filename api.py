@@ -1,18 +1,25 @@
 import argparse
 import io
+import json
+from json import JSONDecodeError
 from pathlib import Path
+from urllib.parse import parse_qs
 
 import soundfile as sf
 import torch
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
+from hypy_utils.logging_utils import setup_logger
 from torch import no_grad, LongTensor
 
 import commons
 import utils
 from models import SynthesizerTrn
 from text import text_to_sequence
+
+
+log = setup_logger()
 
 app = FastAPI()
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -55,14 +62,28 @@ async def get_options():
 
 @app.post("/tts")
 async def generate(request: Request):
-    data = await request.json()
-    text = data.get('text')
+    body = (await request.body()).decode()
+
+    # Try parse json
+    if body.startswith('{'):
+        try:
+            data = json.loads(body)
+        except JSONDecodeError as e:
+            raise HTTPException(status_code=400, detail="Invalid JSON format")
+    # Try parse x-www-form-urlencoded
+    else:
+        data = parse_qs(body)
+        data = {k: v[0] for k, v in data.items()}
+
+    log.info(data)
+
+    text = data.get('text').strip()
     speaker = data.get('speaker')
     language = data.get('language', '日本語')
     speed = data.get('speed', 1.0)
 
     if not text or not speaker or language not in language_marks:
-        raise HTTPException(status_code=400, detail="Invalid input parameters")
+        raise HTTPException(status_code=400, detail="Invalid speaker or language (please check /tts/options)")
 
     audio = tts_fn(text, speaker, language, speed)
     audio_io = io.BytesIO()
