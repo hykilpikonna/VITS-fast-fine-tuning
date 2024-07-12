@@ -11,6 +11,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from hypy_utils.logging_utils import setup_logger
+from starlette.middleware.cors import CORSMiddleware
 from torch import no_grad, LongTensor
 
 import commons
@@ -30,6 +31,15 @@ language_marks = {
     "English": "[EN]",
     "Mix": "",
 }
+
+# Allow all CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def get_text(text: str, is_symbol: bool):
