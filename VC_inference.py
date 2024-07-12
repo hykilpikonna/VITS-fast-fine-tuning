@@ -9,7 +9,6 @@ import utils
 from models import SynthesizerTrn
 import gradio as gr
 import librosa
-import webbrowser
 
 from text import text_to_sequence, _clean_text
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -28,12 +27,15 @@ language_marks = {
     "Mix": "",
 }
 lang = ['日本語', '简体中文', 'English', 'Mix']
+
+
 def get_text(text, hps, is_symbol):
     text_norm = text_to_sequence(text, hps.symbols, [] if is_symbol else hps.data.text_cleaners)
     if hps.data.add_blank:
         text_norm = commons.intersperse(text_norm, 0)
     text_norm = LongTensor(text_norm)
     return text_norm
+
 
 def create_tts_fn(model, hps, speaker_ids):
     def tts_fn(text, speaker, language, speed):
@@ -51,6 +53,7 @@ def create_tts_fn(model, hps, speaker_ids):
         return "Success", (hps.data.sampling_rate, audio)
 
     return tts_fn
+
 
 def create_vc_fn(model, hps, speaker_ids):
     def vc_fn(original_speaker, target_speaker, record_audio, upload_audio):
@@ -83,6 +86,8 @@ def create_vc_fn(model, hps, speaker_ids):
         return "Success", (hps.data.sampling_rate, audio)
 
     return vc_fn
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_dir", default="./G_latest.pth", help="directory to your fine-tuned model")
