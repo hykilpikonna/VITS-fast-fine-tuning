@@ -92,6 +92,9 @@ async def generate(request: Request):
     language = data.get('language', '日本語')
     speed = data.get('speed', 1.0)
 
+    if len(text) > 200:
+        raise HTTPException(status_code=400, detail="TL;DR")
+
     if not text or not speaker or language not in language_marks:
         raise HTTPException(status_code=400, detail="Invalid speaker or language (please check /tts/options)")
 
