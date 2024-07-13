@@ -87,7 +87,7 @@ async def generate(request: Request):
 
     log.info(data)
 
-    text = data.get('text').strip()
+    text = data.get('text').strip().replace("\n", "  ")
     speaker = data.get('speaker')
     language = data.get('language', '日本語')
     speed = data.get('speed', 1.0)
