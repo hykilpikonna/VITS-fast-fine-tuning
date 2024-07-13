@@ -100,11 +100,13 @@ async def generate(request: Request):
 
     audio = tts_fn(text, speaker, language, speed)
     audio_io = io.BytesIO()
-    sf.write(audio_io, audio, hps.data.sampling_rate, format='OGG')
+    # sf.write(audio_io, audio, hps.data.sampling_rate, format='OGG')
+    # Since safari don't support ogg, use mp3 instead
+    sf.write(audio_io, audio, hps.data.sampling_rate, format='MP3')
     audio_io.seek(0)
 
-    return StreamingResponse(audio_io, media_type='audio/ogg',
-                             headers={'Content-Disposition': 'attachment; filename="output.ogg"'})
+    return StreamingResponse(audio_io, media_type='audio/mpeg',
+                             headers={'Content-Disposition': 'attachment; filename="output.mp3"'})
 
 
 if __name__ == "__main__":
